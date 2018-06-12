@@ -10,17 +10,32 @@ namespace Migrator
     class Program
     {
         static void Main(string[] args)
-        {
-          
-            foreach (var item in args)
+        {        
+            if (args.Contains("-cs"))
             {
-                if (item.Contains("Initial Catalog"))
+                for (int i = 0; i < args.Length; i++)
                 {
-                    SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(item);
-                    var dbname = builder.InitialCatalog;
-                    Console.WriteLine(dbname);
-                }
+                    if (args[i] == "-cs")
+                    {
+                        try
+                        {
+                            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(args[i + 1]);
+                            var dbname = builder.InitialCatalog;
+                            Console.WriteLine(dbname);
+                        }
+                        catch (Exception)
+                        {
+
+                            throw new ArgumentException("Connection string is not in a correct format");
+                        }
+                    
+                        i = i + 1;
+                    }                   
+                }                
             }
+            else
+                throw new ArgumentException("Argument has not contain ''-cs'' paramater .");
+
         }
     }
 }
