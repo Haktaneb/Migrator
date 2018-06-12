@@ -21,9 +21,6 @@ namespace Migrator
                     Console.WriteLine(dbname);
                 }
             }
-           
-            
-
         }
     }
 }
