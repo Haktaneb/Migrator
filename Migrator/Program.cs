@@ -16,11 +16,20 @@ namespace Migrator
                 {
                     if (args[i] == "-cs")
                     {
+
                      control = true;
                         try
-                        {
+                        {                      
                             SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(args[i + 1]);
+
+                            var ConnectionString = @"Data Source="+builder.DataSource + ";Integrated Security="+ builder.IntegratedSecurity;
+                            var cnn = new SqlConnection(ConnectionString);
+
+                             Controls controls = new Controls(cnn);
+
                             var dbname = builder.InitialCatalog;
+                            controls.CheckDbExists(dbname);
+
                             Console.WriteLine(dbname);
                         }
                         catch (ArgumentException e )
