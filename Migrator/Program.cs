@@ -20,7 +20,13 @@ namespace Migrator
                         try
                         {
                             SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(args[i + 1]);
-                            var dbname = builder.InitialCatalog;
+                        var ConnectionString = @"Data Source=" + builder.DataSource + ";Integrated Security=" + builder.IntegratedSecurity;
+                        var cnn = new SqlConnection(ConnectionString);
+                        var dbConnection = new SqlConnection(builder.ConnectionString);
+
+
+                        Controls controls = new Controls(cnn, dbConnection);
+                        var dbname = builder.InitialCatalog;
                             Console.WriteLine(dbname);
                         }
                         catch (ArgumentException e )
