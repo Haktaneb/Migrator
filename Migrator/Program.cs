@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Migrator.Models;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,37 +13,79 @@ namespace Migrator
     {
         static void Main(string[] args)
         {
-            Boolean control=false;
-                for (int i = 0; i < args.Length; i++)
+            SqlConnectionStringBuilder builder;
+            SqlConnection cnn = null;
+            SqlConnection dbConnection=null;
+            List<FileContent> fileNameList = new List<FileContent>();
+            Boolean control = false;
+            Boolean control2 = false;
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i] == "-cs")
                 {
-                    if (args[i] == "-cs")
+                    control = true;
+                    try
                     {
-                     control = true;
-                        try
-                        {
-                            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(args[i + 1]);
+                        builder = new SqlConnectionStringBuilder(args[i + 1]);
                         var ConnectionString = @"Data Source=" + builder.DataSource + ";Integrated Security=" + builder.IntegratedSecurity;
-                        var cnn = new SqlConnection(ConnectionString);
-                        var dbConnection = new SqlConnection(builder.ConnectionString);
-
-
-                        Controls controls = new Controls(cnn, dbConnection);
+                        cnn = new SqlConnection(ConnectionString);
+                        dbConnection = new SqlConnection(builder.ConnectionString);
+                        DbController controls = new DbController(cnn, dbConnection);
                         var dbname = builder.InitialCatalog;
-                            Console.WriteLine(dbname);
-                        }
-                        catch (ArgumentException e )
-                        {
-                            Console.WriteLine("Connection string is not in a correct format",e);                   
-                        }
-
-                              i++;
-                    }                   
+                        Console.WriteLine(dbname);
+                        controls.CheckDbExists(dbname);
+                    }
+                    catch (ArgumentException e)
+                    {
+                        Console.WriteLine("Connection string is not in a correct format", e);
+                    }
+                    i++;
                 }
+                else if (args[i] == "-p")
+                {
+                    control2 = true;
+                    try
+                    {
+                        string[] FileNames = Directory.GetFiles(args[i + 1], "*.txt");
+                        int nameCounter = 0;
+                        Console.WriteLine("--- Files: ---");
+                        foreach (string name in FileNames)
+                        {
+                            FileContent content = new FileContent();
+                            content.FilePath = name;
+                            content.FileName = Path.GetFileName(name);
+                            fileNameList.Add(content);
+                            nameCounter++;
+                            Console.WriteLine("returns('{0}') File Number '{1}'", Path.GetFileName(name), nameCounter);
+                        }
+                    }
+                    catch (ArgumentException e)
+                    {
+                        Console.WriteLine("File path doesn't correct!", e);
+                    }
+                    i++;
+                }
+            }
+            int reader;
+            reader = Int32.Parse(Console.ReadLine());
+            if (reader >= 1 && reader <= 9)
+            {
+                string filecontent = System.IO.File.ReadAllText(fileNameList.ElementAt(reader-1).FilePath);
+                VersionSpaces version = new VersionSpaces(dbConnection);
+                version.CreateVersion(filecontent, fileNameList.ElementAt(reader-1).FileName);
+            }
+            else
+            {
+                Console.WriteLine("You must enter defined number \n ");
+            }
             if (control == false)
-            {             
+            {
                 Console.WriteLine("Argument has not contain ''- cs'' paramater.");
             }
-
-        }
+           else if (control2 == false)
+            {
+                Console.WriteLine("Argument has not contain ''- p'' paramater.");
+            }
+       }
     }
 }
