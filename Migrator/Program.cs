@@ -17,13 +17,12 @@ namespace Migrator
             SqlConnection cnn = null;
             SqlConnection dbConnection=null;
             List<FileContent> fileNameList = new List<FileContent>();
-            Boolean control = false;
-            Boolean control2 = false;
+            int control=0;
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "-cs")
                 {
-                    control = true;
+                    control++;
                     try
                     {
                         builder = new SqlConnectionStringBuilder(args[i + 1]);
@@ -41,9 +40,9 @@ namespace Migrator
                     }
                     i++;
                 }
-                else if (args[i] == "-p")
+                 if (args[i] == "-p")
                 {
-                    control2 = true;
+                    control ++;
                     try
                     {
                         string[] FileNames = Directory.GetFiles(args[i + 1], "*.txt");
@@ -66,26 +65,25 @@ namespace Migrator
                     i++;
                 }
             }
-            int reader;
-            reader = Int32.Parse(Console.ReadLine());
-            if (reader >= 1 && reader <= 9)
+            if (control % 2 == 0)
             {
-                string filecontent = System.IO.File.ReadAllText(fileNameList.ElementAt(reader-1).FilePath);
-                VersionSpaces version = new VersionSpaces(dbConnection);
-                version.CreateVersion(filecontent, fileNameList.ElementAt(reader-1).FileName);
+                int reader;
+                reader = Int32.Parse(Console.ReadLine());
+                if (reader >= 1 && reader <= 9)
+                {
+                    string filecontent = System.IO.File.ReadAllText(fileNameList.ElementAt(reader - 1).FilePath);
+                    VersionSpaces version = new VersionSpaces(dbConnection);
+                    version.CreateVersion(filecontent, fileNameList.ElementAt(reader - 1).FileName);
+                }
+                else
+                {
+                    Console.WriteLine("You must enter defined number \n ");
+                }
             }
             else
             {
-                Console.WriteLine("You must enter defined number \n ");
-            }
-            if (control == false)
-            {
-                Console.WriteLine("Argument has not contain ''- cs'' paramater.");
-            }
-           else if (control2 == false)
-            {
-                Console.WriteLine("Argument has not contain ''- p'' paramater.");
-            }
+                Console.WriteLine("Argument has not contain ''- cs or -p '' paramater.");
+            }                   
        }
     }
 }
