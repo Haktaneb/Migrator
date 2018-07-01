@@ -1,57 +1,59 @@
-﻿using System;
+﻿using Microsoft.SqlServer.Management.Smo;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.SqlServer.Management.Common;
 
 namespace Migrator
 {
     class DbController
     {
-        private readonly SqlConnection _connection;
-        private readonly SqlConnection _Dbconnection;
-        public DbController(SqlConnection connection, SqlConnection Dbconnection)
+        private readonly SqlConnection connection;
+        private readonly string dbName;
+
+        public DbController(string dbName, SqlConnection connection)
         {
-            _connection = connection;
-            _Dbconnection = Dbconnection;
+            this.dbName = dbName;
+            this.connection = connection;
+        }   
+
+        public void CreateDatabase()
+        {
+            CreateDatabaseIfNotExist();
+            CreateVersionTableIfNotExist();
         }
-        public void CheckDbExists(string dbname)
+
+        private void CreateDatabaseIfNotExist()
         {
-            _connection.Open();
-            var CheckDbCommand = new SqlCommand(@"SELECT name 
-                                                    FROM master.dbo.sysdatabases 
-                                                    WHERE ([name] = @dbname;", _connection);
-            CheckDbCommand.Parameters.AddWithValue("@dbname", dbname);
-            using (var reader = CheckDbCommand.ExecuteReader())
+            var CheckDbCommand = new SqlCommand(@"SELECT count(*) FROM sysdatabases WHERE [name] = @dbname", connection);
+
+            CheckDbCommand.Parameters.AddWithValue("@dbname", dbName);
+
+            var count = Convert.ToInt32 (CheckDbCommand.ExecuteScalar());
+
+            var isDbExists = count > 0;
+
+            if (!isDbExists)
             {
-                if (reader.HasRows)
-                {
-                    _connection.Close();
-                    Console.WriteLine("Db is exists");
-                    CreateVersionTableIfNotExist();
-                }
-                else
-                {
-                    _connection.Close();
-                    _connection.Open();
-                    var CreateDbCommand = new SqlCommand(@"CREATE DATABASE " + dbname + ";", _connection);
-                    CreateDbCommand.ExecuteNonQuery();
-                    _connection.Close();
-                    Console.WriteLine("Db is created");
-                    CreateVersionTableIfNotExist();
-                }
+                var CreateDbCommand = new SqlCommand($"CREATE DATABASE {dbName};", connection);
+                CreateDbCommand.ExecuteNonQuery();
             }
+            
+            connection.ChangeDatabase(dbName);
         }
-        public void CreateVersionTableIfNotExist ()
+
+        private void CreateVersionTableIfNotExist()
         {
-            _Dbconnection.Open();
             var CreateVersionTableIfNotExistComand = new SqlCommand(@"If not exists
                                                         (select * 
                                                         from INFORMATION_SCHEMA.TABLES where TABLE_NAME = 'Version') 
-                                                        CREATE TABLE Version(Vname varchar(300) ,Order_ int IDENTITY(1,1) ,CreationDate datetime)", _Dbconnection);
+                                                        CREATE TABLE Version(Vname varchar(300) ,Order_ int IDENTITY(1,1) ,CreationDate datetime)", connection);
             CreateVersionTableIfNotExistComand.ExecuteNonQuery();
-            _Dbconnection.Close();
-        }        
+        }
+
     }
 }
