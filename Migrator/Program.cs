@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Migrator.Models;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,36 +13,14 @@ namespace Migrator
     {
         static void Main(string[] args)
         {
-            Boolean control=false;
-                for (int i = 0; i < args.Length; i++)
-                {
-                    if (args[i] == "-cs")
-                    {
-                     control = true;
-                        try
-                        {
-                            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(args[i + 1]);
-                        var ConnectionString = @"Data Source=" + builder.DataSource + ";Integrated Security=" + builder.IntegratedSecurity;
-                        var cnn = new SqlConnection(ConnectionString);
-                        var dbConnection = new SqlConnection(builder.ConnectionString);
+            List<FileContent> fileNameList = new List<FileContent>();
 
+            var parameters = MigrationParameters.ParseArguments(args);
 
-                        Controls controls = new Controls(cnn, dbConnection);
-                        var dbname = builder.InitialCatalog;
-                            Console.WriteLine(dbname);
-                        }
-                        catch (ArgumentException e )
-                        {
-                            Console.WriteLine("Connection string is not in a correct format",e);                   
-                        }
-
-                              i++;
-                    }                   
-                }
-            if (control == false)
-            {             
-                Console.WriteLine("Argument has not contain ''- cs'' paramater.");
-            }
+            using (DbMigrator migrator = new DbMigrator (parameters))
+            {
+                migrator.Migrate();
+            } 
 
         }
     }
