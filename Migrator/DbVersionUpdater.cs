@@ -22,11 +22,21 @@
         public void UpdateDb()
         {
             var v = GetDbCurrentVersion();
-            foreach (var file in scriptFiles)
+            var FileV = GetFileCurrentVersion();
+            int VersionNumberFinder = 0;
+
+            if (FileV > v)
             {
-                RunScriptFile(file);
-                InsertVersion(Path.GetFileNameWithoutExtension(file));
-            }
+                foreach (var file in scriptFiles)
+                {
+                    VersionNumberFinder++;
+                    if (v < VersionNumberFinder)
+                    {
+                        RunScriptFile(file);
+                        InsertVersion(Path.GetFileNameWithoutExtension(file));
+                    }                  
+                }
+            }            
         }
 
         private int GetDbCurrentVersion()
@@ -42,6 +52,12 @@
             }
 
             return GetVersionNumberFromVersionName(version.ToString());
+        }
+
+        private int GetFileCurrentVersion()
+        {
+           var FileVersion = scriptFiles[scriptFiles.Length-1];
+           return GetVersionNumberFromVersionName(Path.GetFileNameWithoutExtension(FileVersion));
         }
 
         private int GetVersionNumberFromVersionName(string fileName)
@@ -67,7 +83,7 @@
             System.Diagnostics.Debug.WriteLine($"Running Script From {path}");
 
             string script = File.ReadAllText(path);
-
+            
             Server server = new Server(new ServerConnection(connection));
 
             server.ConnectionContext.ExecuteNonQuery(script);
