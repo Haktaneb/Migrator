@@ -11,10 +11,12 @@
     public class DbVersionUpdater
     {
         private readonly SqlConnection connection;
+        private readonly int spesificVersionNumber;
         private readonly string[] scriptFiles;
 
-        public DbVersionUpdater(string fileDirectoryPath, SqlConnection connection)
+        public DbVersionUpdater(int spesificVersionNumber ,string fileDirectoryPath, SqlConnection connection)
         {
+            this.spesificVersionNumber = spesificVersionNumber;
             this.connection = connection;
             scriptFiles = Directory.GetFiles(fileDirectoryPath, "*.sql");
         }
@@ -22,21 +24,35 @@
         public void UpdateDb()
         {
             var v = GetDbCurrentVersion();
-            var FileV = GetFileCurrentVersion();
-            int VersionNumberFinder = 0;
+            var fileV = GetFileCurrentVersion();
+            int versionNumberFinder = 0;
 
-            if (FileV > v)
+            if (fileV > v)
             {
                 foreach (var file in scriptFiles)
                 {
-                    VersionNumberFinder++;
-                    if (v < VersionNumberFinder)
+                    versionNumberFinder++;
+                    if (v < versionNumberFinder)
                     {
                         RunScriptFile(file);
                         InsertVersion(Path.GetFileNameWithoutExtension(file));
                     }                  
                 }
             }            
+        }
+        public void UpdateDbWithSpesificVersionNumber()
+        {
+            var v = GetDbCurrentVersion();
+            var fileV = GetFileCurrentVersion();
+            if (fileV >= spesificVersionNumber)
+            {
+                RunScriptFile(scriptFiles[spesificVersionNumber - 1]);
+                InsertVersion(Path.GetFileNameWithoutExtension(scriptFiles[spesificVersionNumber - 1]));
+            }
+            else
+            {
+                throw new ArgumentException("Version number doesn't match");
+           }      
         }
 
         private int GetDbCurrentVersion()

@@ -14,10 +14,12 @@ namespace Migrator
         private readonly SqlConnection connection;
         private readonly string dbName;
         private readonly string filesPath;
+        private readonly int spesificVersionNumber;
 
         public DbMigrator(MigrationParameters parameters)
         {
             filesPath = parameters.SqlScriptsBasePath;
+            spesificVersionNumber = parameters.SpesificVersionNumber;
             dbName = parameters.ConnectionString.InitialCatalog;
             parameters.ConnectionString.InitialCatalog = "master";
             connection = new SqlConnection(parameters.ConnectionString.ConnectionString);
@@ -29,8 +31,13 @@ namespace Migrator
             var dbController = new DbController(dbName, connection);
             dbController.CreateDatabase();
 
-            var updater = new DbVersionUpdater(filesPath, connection);
+            var updater = new DbVersionUpdater(spesificVersionNumber,filesPath, connection);
+            if (spesificVersionNumber != 0)
+            {
+                updater.UpdateDbWithSpesificVersionNumber();
+            }
             updater.UpdateDb();
+            
         }
 
         public void Dispose()
