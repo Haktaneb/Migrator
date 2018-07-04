@@ -18,7 +18,7 @@
         {
             this.spesificVersionNumber = spesificVersionNumber;
             this.connection = connection;
-            scriptFiles = Directory.GetFiles(fileDirectoryPath, "*.txt");
+            scriptFiles = Directory.GetFiles(fileDirectoryPath, "*.sql");
         }
 
         public void UpdateDb()
