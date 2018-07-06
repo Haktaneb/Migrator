@@ -8,6 +8,7 @@ namespace Migrator
         public SqlConnectionStringBuilder ConnectionString { get; set; }
         public string SqlScriptsBasePath { get; set; }
         public int SpesificVersionNumber { get; set; }
+        public bool IsUp { get; set; }
         public static MigrationParameters ParseArguments(string[] args)
         {
             var parameterModel = new MigrationParameters();
@@ -29,10 +30,16 @@ namespace Migrator
                 }
                 if (args[i] == "-v")
                 {
+                    parameterModel.IsUp = true;
                     parameterModel.SpesificVersionNumber = Convert.ToInt32(args[i + 1]);
-
-
                 }
+
+                if (args[i] == "-r")
+                {
+                    parameterModel.IsUp = false;
+                    parameterModel.SpesificVersionNumber = Convert.ToInt32(args[i + 1]);
+                }
+
             }
 
             parameterModel.Validate();
