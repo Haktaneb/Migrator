@@ -15,14 +15,12 @@ namespace Migrator
         private readonly string dbName;
         private readonly string filesPath;
         private readonly int spesificVersionNumber;
-        private readonly bool isUp;
 
         public DbMigrator(MigrationParameters parameters)
         {
             filesPath = parameters.SqlScriptsBasePath;
             spesificVersionNumber = parameters.SpesificVersionNumber;
             dbName = parameters.ConnectionString.InitialCatalog;
-            isUp = parameters.IsUp;
             parameters.ConnectionString.InitialCatalog = "master";
             connection = new SqlConnection(parameters.ConnectionString.ConnectionString);
             connection.Open();
@@ -33,26 +31,13 @@ namespace Migrator
             var dbController = new DbController(dbName, connection);
             dbController.CreateDatabase();
 
-            var fileOperator = new FileOperations();
-            fileOperator.FileReader(filesPath);
-            var xxx = fileOperator.GetFileVersions();
-            if (isUp == true)
+            var updater = new DbVersionUpdater(spesificVersionNumber,filesPath, connection);
+            if (spesificVersionNumber != 0)
             {
-                var updater = new DbVersionUpdater(spesificVersionNumber, fileOperator.GetFileVersions(), connection);
-                if (spesificVersionNumber != 0)
-                {
-                    updater.UpdateDbWithSpesificVersionNumber();
-                }
-                else
-                {
-                    updater.UpdateDb();
-                }
+                updater.UpdateDbWithSpesificVersionNumber();
             }
-            else
-            {
-                var reducer = new DbVersionReducer(spesificVersionNumber, fileOperator.GetFileVersions(), connection);
-                reducer.ReduceDb();                             
-            }               
+            updater.UpdateDb();
+            
         }
 
         public void Dispose()

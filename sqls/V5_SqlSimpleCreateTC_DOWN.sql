@@ -1,2 +1,0 @@
-ALTER TABLE [House]
-DROP COLUMN RoomNumber; 

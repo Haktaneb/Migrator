@@ -2,7 +2,6 @@
 {
     using Microsoft.SqlServer.Management.Common;
     using Microsoft.SqlServer.Management.Smo;
-    using Migrator.Models;
     using System;
     using System.Collections.Generic;
     using System.Data.SqlClient;
@@ -13,30 +12,30 @@
     {
         private readonly SqlConnection connection;
         private readonly int spesificVersionNumber;
-        private readonly List<FileVersionModel> scriptFiles;
+        private readonly string[] scriptFiles;
 
-        internal DbVersionUpdater(int spesificVersionNumber , List<FileVersionModel> scriptFiles, SqlConnection connection)
+        public DbVersionUpdater(int spesificVersionNumber ,string fileDirectoryPath, SqlConnection connection)
         {
             this.spesificVersionNumber = spesificVersionNumber;
-            this.connection = connection;          
-            this.scriptFiles = scriptFiles.Where(e => e.IsUp.Equals(true)).ToList();
+            this.connection = connection;
+            scriptFiles = Directory.GetFiles(fileDirectoryPath, "*.sql");
         }
 
         public void UpdateDb()
         {
             var v = GetDbCurrentVersion();
-            var fileVersion = GetFileCurrentVersion();
+            var fileV = GetFileCurrentVersion();
             int versionNumberFinder = 0;
 
-            if (fileVersion > v)
+            if (fileV > v)
             {
                 foreach (var file in scriptFiles)
                 {
                     versionNumberFinder++;
                     if (v < versionNumberFinder)
                     {
-                        RunScriptFile(file.Path);
-                        InsertVersion(file.Name);
+                        RunScriptFile(file);
+                        InsertVersion(Path.GetFileNameWithoutExtension(file));
                     }                  
                 }
             }            
@@ -44,33 +43,11 @@
         public void UpdateDbWithSpesificVersionNumber()
         {
             var v = GetDbCurrentVersion();
-            var fileVersion = GetFileCurrentVersion();
-            int versionNumberFinder = 0;
-             
-            if (fileVersion >= spesificVersionNumber && fileVersion>v)
+            var fileV = GetFileCurrentVersion();
+            if (fileV >= spesificVersionNumber)
             {
-                if (spesificVersionNumber - 1 != v)
-                {
-                    foreach (var file in scriptFiles)
-                    {
-                        versionNumberFinder++;
-                        if (versionNumberFinder == spesificVersionNumber)
-                        {
-                            break;
-                        }
-                       else if (v <= spesificVersionNumber && v < versionNumberFinder)
-                        {
-                            RunScriptFile(file.Path);
-                            InsertVersion(Path.GetFileNameWithoutExtension(file.Name));
-                        }
-                        
-                    }
-                }
-                else
-                {
-                    RunScriptFile(scriptFiles[spesificVersionNumber - 1].Path);
-                    InsertVersion(scriptFiles[spesificVersionNumber - 1].Name);
-                }              
+                RunScriptFile(scriptFiles[spesificVersionNumber - 1]);
+                InsertVersion(Path.GetFileNameWithoutExtension(scriptFiles[spesificVersionNumber - 1]));
             }
             else
             {
@@ -78,7 +55,7 @@
            }      
         }
 
-        public int GetDbCurrentVersion()
+        private int GetDbCurrentVersion()
         { 
             var sql = @"SELECT TOP 1 [Vname] FROM [Version] ORDER BY CreationDate DESC";
 
@@ -93,10 +70,10 @@
             return GetVersionNumberFromVersionName(version.ToString());
         }
 
-        public int GetFileCurrentVersion()
+        private int GetFileCurrentVersion()
         {
-           var FileVersion = scriptFiles[scriptFiles.Count-1].Version;
-            return FileVersion;
+           var FileVersion = scriptFiles[scriptFiles.Length-1];
+           return GetVersionNumberFromVersionName(Path.GetFileNameWithoutExtension(FileVersion));
         }
 
         private int GetVersionNumberFromVersionName(string fileName)
@@ -117,7 +94,7 @@
             insertVersion.ExecuteNonQuery();
         }
 
-        public void RunScriptFile(string path)
+        private void RunScriptFile(string path)
         {
             System.Diagnostics.Debug.WriteLine($"Running Script From {path}");
 

@@ -47,11 +47,9 @@
   <ItemGroup>
     <Compile Include="DbController.cs" />
     <Compile Include="DbMigrator.cs" />
-    <Compile Include="DbVersionReducer.cs" />
     <Compile Include="DbVersionUpdater.cs" />
-    <Compile Include="FileOperations.cs" />
     <Compile Include="MigrationParameters.cs" />
-    <Compile Include="Models\FileVersionModel .cs" />
+    <Compile Include="Models\FileContent.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VersionSpaces.cs" />
