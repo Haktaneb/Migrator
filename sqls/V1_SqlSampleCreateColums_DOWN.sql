@@ -1,0 +1,4 @@
+DROP TABLE [House];
+GO
+DROP TABLE [User];
+

@@ -13,8 +13,6 @@ namespace Migrator
     {
         static void Main(string[] args)
         {
-            List<FileContent> fileNameList = new List<FileContent>();
-
             var parameters = MigrationParameters.ParseArguments(args);
 
             using (DbMigrator migrator = new DbMigrator (parameters))
